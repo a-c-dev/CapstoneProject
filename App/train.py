@@ -1,7 +1,7 @@
 from sklearn.metrics import fbeta_score, accuracy_score, make_scorer, precision_score, recall_score
 from sklearn.model_selection import GridSearchCV
-from sklearn.ensemble import AdaBoostClassifier
-
+import xgboost as xgb
+import numpy as np
 from joblib import dump
 from time import gmtime, strftime
 import os
@@ -33,10 +33,10 @@ dm.create_train_test_split(EGG_brainwave_df,
 # --------------------------------------------------------------------------------------Define the supervised classifier
 print("Define the supervised classifier")
 # Supervised classifier instance
-learner = AdaBoostClassifier(random_state=0)
-learning_params = {'algorithm': ['SAMME', 'SAMME.R'],
-                   'n_estimators': [5, 10, 12, 14, 15, 16, 18, 20, 22, 25, 28, 30, 35, 40, 50, 80, 100, 120]
-                   }
+learner = xgb.XGBClassifier(seed=0)
+learning_params = {'base_score': list(np.arange(0.2, 0.5, 0.1)),
+                   'n_estimators': [10, 40, 60, 100, 120, 130, 140],
+                   'objective': ['binary:logistic']}
 # -----------------------------------------------------------------------------------------Train and Tune the classifier
 print("Train and Tune the classifier")
 grid_obj = GridSearchCV(learner,
@@ -50,10 +50,10 @@ learner = grid_fit.best_estimator_
 print("Save classifier for later")
 # Save trained model on a file for later usage
 dump(learner, os.path.join(params.models_dir(),
-                           "AdaBoostClassifier" + strftime("%Y-%m-%d-%H-%M-%S", gmtime()) + ".joblib"))
+                           learner.__class__.__name__ + strftime("%Y-%m-%d-%H-%M-%S", gmtime()) + ".joblib"))
 # ---------------------------------------------------------------------------------------------------------Print metrics
 print("Print metrics")
-y_test_pred = learner.predict(dm.testing_data[0])
+y_test_pred = [round(value) for value in learner.predict(dm.testing_data[0])]
 print(f"Accuracy Score: {accuracy_score(dm.testing_data[1], y_test_pred)}")
 print(f"FBeta Score: {fbeta_score(dm.testing_data[1], y_test_pred, beta=params.beta())}")
 print(f"Precision Score: {precision_score(dm.testing_data[1], y_test_pred)}")

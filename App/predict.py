@@ -27,7 +27,7 @@ topredict_brainwave_df = dm.format_topredict_df(topredict_brainwave_df)
 # --------------------------------------------------------------------------------------------------------Load predictor
 predictor = load(os.path.join(params.models_dir(), params.predictor_file_name()))
 # ------------------------------------------------------------------------------------------------------make predictions
-predictions = predictor.predict(topredict_brainwave_df)
+predictions = [round(value) for value in predictor.predict(topredict_brainwave_df)]
 # ------------------------------------------------------------------------------------------------------save predictions
 pred_path = os.path.join(params.data_dir(),
                          "predicted_" + params.topredict_file_name())
